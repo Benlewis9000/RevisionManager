@@ -1,6 +1,12 @@
 package github.benlewis9000.revisionmanager;
 
+import javax.swing.plaf.synth.SynthScrollBarUI;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Scanner;
+
+import static org.fusesource.jansi.Ansi.ansi;
 
 public class CommandHandler {
 
@@ -14,23 +20,14 @@ public class CommandHandler {
 
             case "entry":
 
-                if (args.length == 2){
+                if (args.length >= 3){
 
                     switch (args[1]){
 
-                        case "list":
-                            // Todo: List entered args
-                            return true;
-
-                    }
-
-                }
-                else if (args.length >= 3){
-
-                    switch (args[1]){
 
                         case "new":
-                            // Todo: save to file as an RevisionEntry
+
+                            // Generate a new RevisionEntry
 
                             String message = "";
                             for (int i = 2; i < args.length; i++){
@@ -38,40 +35,106 @@ public class CommandHandler {
                                 if (i == args.length-1) message = message + args[i];
                                 else message = message + args[i] + " ";
 
+                            }
 
+                            // Block entry of ';' char, as it will mess up CSV
+                            for (char c : message.toCharArray()){
+
+                                if (c == ';'){
+
+                                    System.out.println( ansi().render("@|red ERROR: Entry message may not contain semicolons (\";\").|@"));
+
+                                    return true;
+
+                                }
 
                             }
 
-                            RevisionEntry entry = new RevisionEntry(RevisionEntry.getTotalEntries() + 1, message);
+                            RevisionEntry newEntry = RevisionEntry.newEntry(message);
                             // Automatically saved to file by constructor
 
                             return true;
 
-                        case "list":
-                            // Todo: list RevisionEntry's
-                            return true;
-
                         case "delete":
-                            // Todo: delete RevisionEntry's
+
+                            // Todo: delete RevisionEntry's (required?)
 
                             return true;
 
                         case "view":
+
+                            // View one specified entry
+
                             try {
-                                Integer.parseInt(args[2]);
-                                System.out.println("Recalling " + args[2] + "...");
+
+                                int ID = Integer.parseInt(args[2]);
+
+                                if (RevisionEntry.loadEntry(ID).isPresent()) {
+
+                                    RevisionEntry loadedEntry = RevisionEntry.loadEntry(ID).get();
+
+                                    System.out.println(ansi().render("@|green Found entry " + ID + ": " +
+                                            "\n    Created: |@" + loadedEntry.getDay() + "/" + loadedEntry.getMonth() + "/" + loadedEntry.getYear() +
+                                            "\n    @|green Message: |@" + loadedEntry.getMessage() +
+                                            "\n    @|green Next recall: todo...|@"));
+
+                                }
+
                             }
                             catch (NumberFormatException e){
-                                System.out.println("ERROR: Please enter a valid integer.");
+                                System.out.println( ansi().render("@|red ERROR: Please enter a valid integer.|@"));
                             }
-                            // Todo: view RevisionEntry
+
+                            return true;
+
+                    }
+
+                }
+                else if (args.length == 2){
+
+                    switch (args[1]){
+
+                        case "list":
+
+                            Scanner scanner = null;
+
+                            try {
+
+                                scanner = new Scanner( new File("entries.txt"));
+
+                                boolean noneFound = true;
+
+                                while (scanner.hasNextLine()){
+
+                                    noneFound = false;
+
+                                    String[] split = scanner.nextLine().split(";");
+
+                                    System.out.println( ansi().render("@|green Entry |@" + split[0] +
+                                            "\n    @|green Created:|@ " + split[1] + "/" + split[2] + "/" + split[3] +
+                                            "\n   @|green  Message:|@ " + split[4] + "|@"));
+
+                                }
+
+                                if (noneFound) System.out.println( ansi().render("@|red No entries found.|@"));
+
+
+                            }
+                            catch (IOException e){
+
+                                e.printStackTrace();
+
+                                System.out.println( ansi().render("@|red ERROR: Failed to read settings.txt.|@"));
+
+                            }
+
                             return true;
 
                     }
 
                 }
                 else {
-                    System.out.println("Insufficient/invalid arguments! Please type \"help\" for correct usage. ");
+                    System.out.println("@|red Insufficient/invalid arguments! Please type \"help\" for correct usage.|@");
                     return true;
                 }
 
@@ -82,15 +145,15 @@ public class CommandHandler {
             case "help":
 
                 System.out.println("Commands:" +
-                        "\n    entry new <entry message>" +
+                        "\n    @|green entry new <entry message>|@" +
                         "\n        - Enter an entry for today for future review." +
-                        "\n    entry view <ID>" +
+                        "\n    @|green entry view <ID>|@" +
                         "\n        - View the specified entry, entry date, and review (recall) times." +
-                        "\n    entry delete <ID>" +
+                        "\n    @|green entry delete <ID>|@" +
                         "\n        - Delete the specified entry." +
-                        "\n    entry list" +
+                        "\n    @|green entry list|@" +
                         "\n        - List all entry ID's, along with their message." +
-                        "\n    recall" +
+                        "\n    @|green recall|@" +
                         "\n        - Review the entries to recall today.");
                 return true;
 
@@ -108,7 +171,11 @@ public class CommandHandler {
     public static String[] stringToArgs(String string) {
 
 
-        // COnvert input to array of char's
+        return string.split(" ");
+
+        /*
+
+        // Convert input to array of char's
         char[] chars = string.toLowerCase().toCharArray();
 
         ArrayList<String> argsList = new ArrayList<>();
@@ -144,7 +211,12 @@ public class CommandHandler {
 
         }
 
+
         return args;
+
+        */
+
+
     }
 
 }

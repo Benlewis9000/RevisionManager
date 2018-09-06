@@ -12,8 +12,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 
+import static github.benlewis9000.revisionmanager.Utils.getDebug;
+
 public class Main {
 
+    // Todo: read from file (after finish/deployment?)
     public static boolean DEBUG = true;
 
     public static void main(String[] args) throws IOException {
@@ -21,14 +24,20 @@ public class Main {
         // Install Jansi system for coloured text output
         AnsiConsole.systemInstall();
 
+        Main.DEBUG = getDebug();
+        System.out.println(getDebug());
+
+        Utils.debug("Ansi installed.");
+        Utils.debug("Debug enabled.");
+
         // Make sure all required files exist
         FileManager.generate();
 
-        List<String> lines = Files.readAllLines(Paths.get("settings.txt"));
-        System.out.println(lines);
-
-
-        // Todo: Assign totalEntries from file
+        if (DEBUG) {
+            List<String> lines = Files.readAllLines(Paths.get("settings.txt"));
+            Utils.debug("Settings:");
+            System.out.println(lines);
+        }
 
         // Todo: check for overdue entries
 

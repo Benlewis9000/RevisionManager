@@ -8,59 +8,15 @@ import java.util.*;
 
 import static org.fusesource.jansi.Ansi.ansi;
 
+
 public class RevisionEntry {
 
-    //private static int totalEntries = -1;
-    private int ID;
+    private final int ID;
     private int day;
     private int month;
     private int year;
     private String message;
 
-    // Scann settings.txt for true value of totalentries
-    public static int getTotalEntries(){
-
-        Scanner scanner = null;
-
-        try {
-
-            scanner = new Scanner( new File("settings.txt"));
-
-            while (scanner.hasNextLine()){
-
-                String[] split = scanner.nextLine().split("=");
-
-                if (split[0].equalsIgnoreCase("totalentries")) return Integer.parseInt(split[1]);
-
-            }
-
-        }
-        catch (IOException e){
-
-            e.printStackTrace();
-
-        }
-        finally {
-
-            if (scanner != null) {
-                scanner.close();
-            }
-
-        }
-
-        System.out.println( ansi().render("@|red ERROR: Failed to read settings.txt for totalEntries value. |@"));
-        System.exit(2);
-        return -1;
-    }
-
-    public static void incrementEntries (){
-
-        int totalEntries = getTotalEntries() + 1;
-
-        // Save increment to file
-        updateTotalEntries(totalEntries);
-
-    }
 
     public int getID() {
         return ID;
@@ -100,27 +56,19 @@ public class RevisionEntry {
         this.message = message;
     }
 
-    public RevisionEntry (int ID, String message){
-
-        incrementEntries();
-
-        // Todo: Make object take correct date values
-
-        Date date = new Date();
-
-        Calendar calendar = Calendar.getInstance(Locale.UK);
-
-        this.ID = ID;
-        this.day = calendar.get(Calendar.DAY_OF_MONTH);
-        this.month = calendar.get(Calendar.MONTH);
-        this.year = calendar.get(Calendar.YEAR);
-        this.message = message;
-
-        this.saveToFile();
-
-    }
-
-    public RevisionEntry (int ID, int day, int month, int year, String message){
+    /**
+     * RevisionEntry constructor
+     * Construct a new RevisionEntry object.
+     *
+     * WARNING: Not to be used to making or loading entry's; use newEntry() and loadEntry(int ID)
+     *
+     * @param ID        Unique ID associated with the RevisionEntry.
+     * @param day       Day of creation.
+     * @param month     Month of creation.
+     * @param year      Year of creation.
+     * @param message   User input message, a record of what the entry is for.
+     */
+    private RevisionEntry (int ID, int day, int month, int year, String message){
 
         this.ID = ID;
         this.day = day;
@@ -130,34 +78,164 @@ public class RevisionEntry {
 
     }
 
-    public void saveToFile(){
+    /**
+     * RevisionEntry generator
+     * Construct a new RevisionEntry and save to file.
+     *
+     * @param message   User input message, a record of what the entry is for.
+     * @return          Return an instance of the RevisionEntry created with the given parameters.
+     */
+    public static RevisionEntry newEntry(String message){
+        // Todo make return Optional (what if file creation fails etc.)
 
-        File entries = new File("entries.txt");
-        PrintWriter printer = null;
+        // Increment totalEntries then use new value as newEntry's ID
+        incrementEntries();
+        int ID = RevisionEntry.getTotalEntries();
+
+        // Get instance of Calendar, use to get correct date values for newEntry
+        Calendar calendar = Calendar.getInstance(Locale.UK);
+
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        int month = calendar.get(Calendar.MONTH);
+        int year = calendar.get(Calendar.YEAR);
+
+        // Construct new RevisionEntry
+        RevisionEntry newEntry = new RevisionEntry(ID, day, month, year, message);
+
+        // Save newEntry to file
+        newEntry.saveToFile();
+
+        // Return newEntry so it can be accessed
+        return newEntry;
+    }
+
+    /**
+     * getTotalEntries
+     *
+     * @return  Returns the int 'totalentries' in 'settings.txt'
+     */
+    public static int getTotalEntries(){
+
+        Scanner scanner = null;
 
         try {
 
-            SimpleDateFormat date = new SimpleDateFormat("dd;mm;YYYY");
+            scanner = new Scanner( new File("settings.txt"));
 
-            printer = new PrintWriter( new BufferedWriter( new FileWriter(entries, true)));
+            while (scanner.hasNextLine()){
 
-            System.out.println( ansi().render("@|green Recorded: " + ID + ";" + day+ ";" + month+ ";" + year + ";" +message + "|@"));
+                String[] split = scanner.nextLine().split("=");
 
-            printer.format("%d;%d;%d;%d;%s%n", ID, day, month, year, message);
+                if (split[0].equalsIgnoreCase("totalentries")) return Integer.parseInt(split[1]);
 
+            }
 
         }
         catch (IOException e){
+
             e.printStackTrace();
+
         }
         finally {
-            if (printer != null){
-                printer.close();
+
+            if (scanner != null) {
+                scanner.close();
             }
+
         }
+
+        System.out.println( ansi().render("@|red ERROR: Failed to read settings.txt for totalEntries value. |@"));
+        System.exit(2);
+        return -1;
+    }
+
+    /**
+     * incrementEntries
+     * Increments 'totalentries' in 'settings.txt' by 1.
+     */
+    public static void incrementEntries (){
+
+        int totalEntries = getTotalEntries() + 1;
+
+        // Save increment to file
+        updateTotalEntries(totalEntries);
 
     }
 
+    /**
+     * RevisionEntry loader
+     * Construct a RevisionEntry loaded from a file using the given ID, if present.
+     *
+     * @param ID    Reference ID for the entry to be loaded.
+     * @return      Return Optional, either holding the valid requested RevisionEntry, or empty.
+     */
+    public static Optional<RevisionEntry> loadEntry(int ID){
+
+        Scanner scanner = null;
+
+        try {
+
+            // Load file to scanner
+            scanner = new Scanner( new File("entries.txt"));
+
+            while (scanner.hasNextLine()){
+
+                // Parse CVS by splitting line into String array
+                String[] split = scanner.nextLine().split(";");
+
+                int loadedID = Integer.parseInt(split[0]);
+
+                // If current iteration has desired ID, generate and return the RevisionEntry
+                if (split[0].equalsIgnoreCase(String.valueOf(ID))) {
+
+                    int loadedDay = Integer.parseInt(split[1]);
+                    int loadedMonth = Integer.parseInt(split[2]);
+                    int loadedYear = Integer.parseInt(split[3]);
+
+                    RevisionEntry entry = new RevisionEntry(loadedID, loadedDay, loadedMonth, loadedYear, split[4]);
+                    return Optional.of(entry);
+
+
+                }
+
+            }
+
+            // If no ID was found and returned...
+            System.out.println( ansi().render("@|red ERROR: Please enter a valid ID.|@"));
+
+        }
+        catch (IOException e){
+
+            e.printStackTrace();
+
+            System.out.println( ansi().render("@|red ERROR: Failed to load entry from entries.txt.|@"));
+
+        }
+        catch (NumberFormatException e){
+
+            e.printStackTrace();
+
+            System.out.println( ansi().render("@|red ERROR: Failed to parse integers in entries.txt.|@"));
+
+        }
+        finally {
+
+            if (scanner != null){
+                scanner.close();
+            }
+
+        }
+
+        // If no entry to the given ID was found, return the empty optional
+        return Optional.empty();
+    }
+
+    /**
+     * updateTotalEntries
+     * Updates the int value of 'totalentries' in 'settings.txt' to given value.
+     *
+     * @param newTotalEntries   New value to assign in settings.txt.
+     */
     public static void updateTotalEntries(int newTotalEntries){
 
 
@@ -167,16 +245,6 @@ public class RevisionEntry {
         try {
 
             File file = new File("settings.txt");
-
-            /*
-            // Debug
-            scanner = new Scanner(file);
-            System.out.println("From debug");
-            while (scanner.hasNextLine()) {
-                System.out.println("foobar");
-                System.out.println(scanner.nextLine());
-            }
-            */
 
             HashMap<String, String> settings = new HashMap<>();
 
@@ -203,7 +271,7 @@ public class RevisionEntry {
 
             }
 
-            System.out.println("Map is : " + settings);
+            Utils.debug("Map is : " + settings);
 
             printer = new PrintWriter( new BufferedWriter( new FileWriter(file, false)));
 
@@ -233,6 +301,39 @@ public class RevisionEntry {
 
         }
 
+
+    }
+
+    /**
+     * RevisionEntry saveToFile
+     * Saves current RevisionEntry object data to 'entries.txt' in the CSV format.
+     */
+    public void saveToFile(){
+
+        // Todo: Boolean return to show success/failure?
+
+        File entries = new File("entries.txt");
+        PrintWriter printer = null;
+
+        try {
+
+            printer = new PrintWriter( new BufferedWriter( new FileWriter(entries, true)));
+
+            System.out.println( ansi().render("@|green Entry " + ID + " has been succesfully recorded!" +
+                            "\nYour first recall will be on (todo..)|@"));
+
+            printer.format("%d;%d;%d;%d;%s%n", ID, day, month, year, message);
+
+
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+        finally {
+            if (printer != null){
+                printer.close();
+            }
+        }
 
     }
 
