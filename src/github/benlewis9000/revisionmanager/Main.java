@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Scanner;
 
 import static github.benlewis9000.revisionmanager.Utils.getDebug;
@@ -47,12 +48,13 @@ public class Main {
             Scanner cmdLine = new Scanner(System.in);
             String input = cmdLine.nextLine();
 
-            // Try to pass args, if false, default to error message and loop
-            if (
-            // Convert input to String[] args and pass to CommandHandler
-            !CommandHandler.onCommand( CommandHandler.stringToArgs(input) )
-                    ) {
-                System.out.println("Invalid command. Type \"help\" for a list of commands.");
+            Optional<Error> commandError = CommandHandler.onCommand(CommandHandler.stringToArgs(input));
+
+            // Try to pass args, catch error from Optional if present.
+            if (commandError.isPresent()){
+
+                commandError.get().printError();
+
             }
 
         }

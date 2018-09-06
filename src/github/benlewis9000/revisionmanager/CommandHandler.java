@@ -1,9 +1,11 @@
 package github.benlewis9000.revisionmanager;
 
 import javax.swing.plaf.synth.SynthScrollBarUI;
+import javax.swing.text.html.Option;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.Scanner;
 
 import static org.fusesource.jansi.Ansi.ansi;
@@ -12,9 +14,9 @@ public class CommandHandler {
 
     // Returns false if command could not be executed
     // Todo: change return type to an enum of custom errors? e.g. invalid command, not enough args, incorrect usage etc.
-    public static boolean onCommand(String[] args){
+    public static Optional<Error> onCommand(String[] args){
 
-        if ( args.length == 0 ) return false;
+        if ( args.length == 0 ) return Optional.of(Error.CNF);
 
         switch (args[0]){
 
@@ -42,9 +44,7 @@ public class CommandHandler {
 
                                 if (c == ';'){
 
-                                    System.out.println( ansi().render("@|red ERROR: Entry message may not contain semicolons (\";\").|@"));
-
-                                    return true;
+                                    return Optional.of(Error.SC);
 
                                 }
 
@@ -53,13 +53,13 @@ public class CommandHandler {
                             RevisionEntry newEntry = RevisionEntry.newEntry(message);
                             // Automatically saved to file by constructor
 
-                            return true;
+                            return Optional.empty();
 
                         case "delete":
 
                             // Todo: delete RevisionEntry's (required?)
 
-                            return true;
+                            return Optional.empty();
 
                         case "view":
 
@@ -78,14 +78,23 @@ public class CommandHandler {
                                             "\n    @|green Message: |@" + loadedEntry.getMessage() +
                                             "\n    @|green Next recall: todo...|@"));
 
+                                    return Optional.empty();
+
+                                }
+                                else {
+
+                                    System.out.println( ansi().render("@|red Entry " + ID + " could not be found."));
+
+                                    return Optional.empty();
+
                                 }
 
                             }
                             catch (NumberFormatException e){
-                                System.out.println( ansi().render("@|red ERROR: Please enter a valid integer.|@"));
-                            }
 
-                            return true;
+                                return Optional.of(Error.NFE);
+
+                            }
 
                     }
 
@@ -112,11 +121,13 @@ public class CommandHandler {
 
                                     System.out.println( ansi().render("@|green Entry |@" + split[0] +
                                             "\n    @|green Created:|@ " + split[1] + "/" + split[2] + "/" + split[3] +
-                                            "\n   @|green  Message:|@ " + split[4] + "|@"));
+                                            "\n   @|green  Message:|@ " + split[4]));
 
                                 }
 
                                 if (noneFound) System.out.println( ansi().render("@|red No entries found.|@"));
+
+                                return Optional.empty();
 
 
                             }
@@ -124,23 +135,22 @@ public class CommandHandler {
 
                                 e.printStackTrace();
 
-                                System.out.println( ansi().render("@|red ERROR: Failed to read settings.txt.|@"));
+                                return Optional.of(Error.IOE);
 
                             }
-
-                            return true;
 
                     }
 
                 }
                 else {
-                    System.out.println("@|red Insufficient/invalid arguments! Please type \"help\" for correct usage.|@");
-                    return true;
+
+                    return Optional.of(Error.IA);
+
                 }
 
             case "recall":
                 // Todo: check todays date with other entries, recall as needed.
-                return true;
+                return Optional.empty();
 
             case "help":
 
@@ -155,14 +165,15 @@ public class CommandHandler {
                         "\n        - List all entry ID's, along with their message." +
                         "\n    @|green recall|@" +
                         "\n        - Review the entries to recall today.");
-                return true;
+
+                return Optional.empty();
 
             case "exit":
 
                 System.exit(0);
 
             default:
-                return false;
+                return Optional.of(Error.CNF);
 
         }
 
@@ -170,52 +181,7 @@ public class CommandHandler {
 
     public static String[] stringToArgs(String string) {
 
-
         return string.split(" ");
-
-        /*
-
-        // Convert input to array of char's
-        char[] chars = string.toLowerCase().toCharArray();
-
-        ArrayList<String> argsList = new ArrayList<>();
-
-        String stringBuffer = new String();
-
-        boolean endSpace = false;
-
-        // if next char is SPACE, add stringBuffer to argsList, then reset stringBuffer
-        // else, add the char to stringBuffer (builds an arg)
-        for (char c : chars) {
-            if (c == ' ') {
-                endSpace = true;
-                argsList.add(stringBuffer);
-                stringBuffer = "";
-            } else {
-                endSpace = false;
-                stringBuffer = stringBuffer + Character.toString(c);
-            }
-        }
-
-        // if input doesn't end with a SPACE, add final stringBuffer to argsList
-        if (!endSpace) {
-            argsList.add(stringBuffer);
-        }
-
-        // Convert the ArrayList<String> to String[]
-        String[] args = new String[argsList.size()];
-
-        for (int i = 0; i < args.length; i++) {
-
-            args[i] = (String) argsList.toArray()[i];
-
-        }
-
-
-        return args;
-
-        */
-
 
     }
 

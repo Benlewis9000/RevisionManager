@@ -16,7 +16,7 @@ public class Utils {
 
         if (Main.DEBUG) {
 
-            System.out.println( ansi().fg(YELLOW).a(str));
+            System.out.println( ansi().fg(YELLOW).a(str).reset());
 
         }
 
