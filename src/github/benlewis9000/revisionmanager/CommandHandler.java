@@ -83,8 +83,6 @@ public class CommandHandler {
                                 }
                                 else {
 
-                                    System.out.println( ansi().render("@|red Entry " + ID + " could not be found."));
-
                                     return Optional.empty();
 
                                 }
@@ -154,7 +152,7 @@ public class CommandHandler {
 
             case "help":
 
-                System.out.println("Commands:" +
+                System.out.println( ansi().render("Commands:" +
                         "\n    @|green entry new <entry message>|@" +
                         "\n        - Enter an entry for today for future review." +
                         "\n    @|green entry view <ID>|@" +
@@ -164,7 +162,7 @@ public class CommandHandler {
                         "\n    @|green entry list|@" +
                         "\n        - List all entry ID's, along with their message." +
                         "\n    @|green recall|@" +
-                        "\n        - Review the entries to recall today.");
+                        "\n        - Review the entries to recall today."));
 
                 return Optional.empty();
 
