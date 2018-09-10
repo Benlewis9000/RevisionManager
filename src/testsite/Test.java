@@ -1,60 +1,28 @@
 package testsite;
 
 import java.io.*;
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.Scanner;
 
 public class Test {
 
     public static void main (String[] args) throws IOException {
 
-        Scanner scanner = null;
 
-        try {
+        LocalDate today = LocalDate.now();
 
-            scanner = new Scanner( new BufferedReader( new FileReader("test.txt") ) );
+        System.out.format("%d;%d;%d%n", today.getDayOfMonth(), today.getMonthValue(), today.getYear());
+        System.out.format("%td;%<tm;%<tY%n", today);
 
-            System.out.format(scanner.nextLine() + ".%n");
-            System.out.format("The number is %2$0,20.2f.%n", 2.0, scanner.nextDouble());
-            System.out.format("Next line.");
+        today.plusMonths(6);
 
-        }
-        finally {
+        LocalDate recall_1 = today.plusDays(1);
+        LocalDate recall_2 = today.plusWeeks(2);
+        LocalDate recall_3 = today.plusMonths(6);
 
-            if (scanner != null){
+        System.out.println(String.valueOf(23553));
 
-                scanner.close();
-
-            }
-
-        }
-
-        Scanner input = new Scanner(System.in);
-        PrintWriter printer = null;
-
-        try {
-
-            // When true, append will not overwrite data on file.
-            printer = new PrintWriter( new BufferedOutputStream( new FileOutputStream("userOut.txt", true)));
-
-            printer.println("Line 1");
-            printer.print("Part 1...");
-            printer.println(" of line 2");
-
-            int i = 3;
-
-            printer.format("and this is line %d", i);
-
-
-        }
-        finally {
-
-            if (printer != null){
-
-                printer.close();
-
-            }
-
-        }
 
     }
 

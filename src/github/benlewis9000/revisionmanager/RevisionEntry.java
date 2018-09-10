@@ -1,9 +1,11 @@
 package github.benlewis9000.revisionmanager;
 
+import com.sun.xml.internal.bind.v2.model.core.ID;
 import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.*;
 
 import static org.fusesource.jansi.Ansi.ansi;
@@ -93,11 +95,11 @@ public class RevisionEntry {
         int ID = RevisionEntry.getTotalEntries();
 
         // Get instance of Calendar, use to get correct date values for newEntry
-        Calendar calendar = Calendar.getInstance(Locale.UK);
+        LocalDate today = LocalDate.now();
 
-        int day = calendar.get(Calendar.DAY_OF_MONTH);
-        int month = calendar.get(Calendar.MONTH);
-        int year = calendar.get(Calendar.YEAR);
+        int day = today.getDayOfMonth();
+        int month = today.getMonthValue();
+        int year = today.getYear();
 
         // Construct new RevisionEntry
         RevisionEntry newEntry = new RevisionEntry(ID, day, month, year, message);
@@ -116,37 +118,34 @@ public class RevisionEntry {
      */
     public static int getTotalEntries(){
 
-        Scanner scanner = null;
+        Optional<String> totalEntries = FileManager.getSetting("totalentries");
 
-        try {
+        if (totalEntries.isPresent()) {
 
-            scanner = new Scanner( new File("settings.txt"));
+            try {
 
-            while (scanner.hasNextLine()){
+                return Integer.parseInt(totalEntries.get());
 
-                String[] split = scanner.nextLine().split("=");
+            }
+            catch (NumberFormatException e) {
 
-                if (split[0].equalsIgnoreCase("totalentries")) return Integer.parseInt(split[1]);
+                e.printStackTrace();
+                System.out.println("@|red ERROR: Could no parse 'totalentries' in 'settings.txt' to integer.");
+                System.exit(2);
+                return -1;
 
             }
 
         }
-        catch (IOException e){
+        else {
 
-            e.printStackTrace();
-
-        }
-        finally {
-
-            if (scanner != null) {
-                scanner.close();
-            }
+            // Exit, as program can no longer accurately ID entries
+            System.out.println(ansi().render("@|red ERROR: Failed to read settings.txt for totalEntries value. |@"));
+            System.exit(2);
+            return -1;
 
         }
 
-        System.out.println( ansi().render("@|red ERROR: Failed to read settings.txt for totalEntries value. |@"));
-        System.exit(2);
-        return -1;
     }
 
     /**
@@ -238,69 +237,7 @@ public class RevisionEntry {
      */
     public static void updateTotalEntries(int newTotalEntries){
 
-
-        Scanner scanner = null;
-        PrintWriter printer = null;
-
-        try {
-
-            File file = new File("settings.txt");
-
-            HashMap<String, String> settings = new HashMap<>();
-
-            scanner = new Scanner(file);
-
-            // Cycle settings, interpret CVS, then save and modifier as needed to Properties
-            while (scanner.hasNextLine()) {
-
-                // Take each line and split the variable from the value
-                String[] split = scanner.nextLine().split("=");
-
-                // If variable is totalentries, increment and assign, otherwise assign original value
-                if (split[0].equalsIgnoreCase("totalentries")){
-
-                    settings.put(split[0], String.valueOf(newTotalEntries));
-
-                }
-                else {
-
-                    settings.put(split[0], split[1]);
-
-                }
-
-
-            }
-
-            Utils.debug("Map is : " + settings);
-
-            printer = new PrintWriter( new BufferedWriter( new FileWriter(file, false)));
-
-            // Save new properties to settings.txt
-            for (Map.Entry<String, String> entry : settings.entrySet()){
-
-                printer.println(entry.getKey() + "=" + entry.getValue());
-
-            }
-
-
-        }
-        catch (IOException e){
-
-            e.printStackTrace();
-
-        }
-        finally {
-
-            if (printer != null){
-                printer.close();
-            }
-
-            if (scanner != null){
-                scanner.close();
-            }
-
-        }
-
+        FileManager.setSetting("totalentries", String.valueOf(newTotalEntries));
 
     }
 
@@ -319,8 +256,8 @@ public class RevisionEntry {
 
             printer = new PrintWriter( new BufferedWriter( new FileWriter(entries, true)));
 
-            System.out.println( ansi().render("@|green Entry " + ID + " has been succesfully recorded!" +
-                            "\nYour first recall will be on (todo..)|@"));
+            System.out.println( ansi().render("@|green Entry |@" + ID + "@|green  has been succesfully recorded!" +
+                            "\nYour first recall will be on |@(todo..)"));
 
             printer.format("%d;%d;%d;%d;%s%n", ID, day, month, year, message);
 
@@ -334,6 +271,71 @@ public class RevisionEntry {
                 printer.close();
             }
         }
+
+    }
+
+    /**
+     * getEntries
+     * Read all entries saved to 'entries.txt' and return as an ArrayList.
+     *
+     * @return  Returns an ArrayList(RevisionEntry) of all entries in 'entries.txt'.
+     */
+    public static ArrayList<RevisionEntry> getEntries(){
+
+        Scanner scanner = null;
+        ArrayList<RevisionEntry> entries = new ArrayList<>();
+
+        try {
+
+            File file = new File("entries.txt");
+
+            scanner = new Scanner(file);
+
+            int line = 0;
+
+            while (scanner.hasNextLine()){
+
+                line++;
+                String nextLine = scanner.nextLine();
+
+                String[] split = nextLine.split(";");
+
+                int id;
+                int day;
+                int month;
+                int year;
+
+                try {
+
+                    id = Integer.parseInt(split[0]);
+                    day = Integer.parseInt(split[1]);
+                    month = Integer.parseInt(split[2]);
+                    year = Integer.parseInt(split[3]);
+
+
+                }
+                catch (NumberFormatException e) {
+
+                    e.printStackTrace();
+                    System.out.println( ansi().render("@|red ERROR: Failed to read " + line));
+                    continue;
+
+                }
+
+                RevisionEntry entry = new RevisionEntry(id, day, month, year, split[4]);
+                entries.add(entry);
+                Utils.debug("getEntries found RevisionEntry " + id);
+
+            }
+
+        }
+        catch (IOException e){
+
+            e.printStackTrace();
+
+        }
+
+        return entries;
 
     }
 

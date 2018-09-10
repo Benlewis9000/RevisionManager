@@ -1,5 +1,6 @@
 package github.benlewis9000.revisionmanager;
 
+import com.sun.jmx.snmp.SnmpBadSecurityLevelException;
 import org.fusesource.jansi.AnsiConsole;
 
 import java.io.BufferedReader;
@@ -8,37 +9,30 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.Scanner;
+import java.time.LocalDate;
+import java.util.*;
 
 import static github.benlewis9000.revisionmanager.Utils.getDebug;
 
 public class Main {
 
-    // Todo: read from file (after finish/deployment?)
-    public static boolean DEBUG = true;
+    public static boolean debug = true;
+    public static final double VERSION = 0.1;
 
     public static void main(String[] args) throws IOException {
 
         // Install Jansi system for coloured text output
         AnsiConsole.systemInstall();
 
-        Main.DEBUG = getDebug();
-        System.out.println(getDebug());
-
         Utils.debug("Ansi installed.");
         Utils.debug("Debug enabled.");
 
         // Make sure all required files exist
-        FileManager.generate();
+        FileManager.generateFiles();
 
-        if (DEBUG) {
-            List<String> lines = Files.readAllLines(Paths.get("settings.txt"));
-            Utils.debug("Settings:");
-            System.out.println(lines);
-        }
+        Utils.reloadDebug();
+
+        Utils.debug("LocalDate.now(): " + LocalDate.now().toString());
 
         // Todo: check for overdue entries
 
@@ -51,11 +45,7 @@ public class Main {
             Optional<Error> commandError = CommandHandler.onCommand(CommandHandler.stringToArgs(input));
 
             // Try to pass args, catch error from Optional if present.
-            if (commandError.isPresent()){
-
-                commandError.get().printError();
-
-            }
+            if (commandError.isPresent()) commandError.get().printError();
 
         }
 

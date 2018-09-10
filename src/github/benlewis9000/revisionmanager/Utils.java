@@ -14,7 +14,7 @@ public class Utils {
 
     public static void debug(String str){
 
-        if (Main.DEBUG) {
+        if (Main.debug) {
 
             System.out.println( ansi().fg(YELLOW).a(str).reset());
 
@@ -58,6 +58,12 @@ public class Utils {
         }
 
         return debug;
+    }
+
+    public static void reloadDebug(){
+
+        Main.debug = getDebug();
+
     }
 
 }
