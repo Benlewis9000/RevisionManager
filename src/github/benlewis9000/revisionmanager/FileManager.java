@@ -12,7 +12,6 @@ import static org.fusesource.jansi.Ansi.ansi;
 public class FileManager {
 
     /**
-     * generateFiles
      * Ensures all necessary files are generated.
      */
     public static void generateFiles(){
@@ -24,10 +23,9 @@ public class FileManager {
     }
 
     /**
-     * setSetting
      * Set the specified setting to the specified value ins 'settings.txt'
      *
-     * @param variable Variable to set.
+     * @param variable Name of variable to set.
      * @param value Value to set to variable.
      */
     public static void setSetting(String variable, String value){
@@ -103,11 +101,10 @@ public class FileManager {
     }
 
     /**
-     * getSetting
      * Get the value of the specified setting, if it exists.
      *
      * @param variable  Variable to search for the value of.
-     * @return          Optional of either the String value of the given variable, or empty.
+     * @return          an optional of either the String value of the given variable, or empty.
      */
     public static Optional<String> getSetting(String variable){
 
@@ -157,7 +154,6 @@ public class FileManager {
     }
 
     /**
-     * generateEmpty
      * Generates a blank file of the given name.
      *
      * @param fileName The name of the .txt file to be created.
@@ -246,6 +242,44 @@ public class FileManager {
         finally {
             if (printWriter !=null) printWriter.close();
         }
+
+    }
+
+    public static ArrayList<String> loadFile(String fileName){
+
+        Scanner scanner = null;
+
+        ArrayList<String> fileLines = new ArrayList<>();
+
+        try {
+
+            // Todo: Turn this into a static loadFile() method for FileManager? (with the comment reading)
+
+            File file = new File(fileName);
+
+            scanner = new Scanner(file);
+
+            while (scanner.hasNextLine()){
+
+                String nextLine = scanner.nextLine();
+
+                if (nextLine.toCharArray()[0] == '#') continue;
+
+                fileLines.add(nextLine);
+
+            }
+        }
+        catch (IOException e){
+
+            e.printStackTrace();
+            System.out.println("@|red Failed to update recalls.");
+
+        }
+        finally {
+            scanner.close();
+        }
+
+        return fileLines;
 
     }
 

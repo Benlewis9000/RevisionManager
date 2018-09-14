@@ -4,6 +4,7 @@ import org.fusesource.jansi.Ansi;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.Scanner;
 
 import static org.fusesource.jansi.Ansi.Color.RED;
@@ -63,6 +64,21 @@ public class Utils {
     public static void reloadDebug(){
 
         Main.debug = getDebug();
+
+    }
+
+    public static int tryParsePosInt(String text) {
+
+        try {
+
+            return Integer.parseInt(text);
+
+        } catch (NumberFormatException e) {
+
+            System.out.println( ansi().fg(RED).a("ERROR: Failed to parse ").a(text).a(" to Integer."));
+            return -1;
+
+        }
 
     }
 

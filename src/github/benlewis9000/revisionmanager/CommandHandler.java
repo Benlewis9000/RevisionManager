@@ -199,8 +199,7 @@ public class CommandHandler {
 
         if (args.length == 1){
 
-            // Todo: recall
-            System.out.println("Todo: Recall");
+            RecallManager.recall();
             return Optional.empty();
 
         }

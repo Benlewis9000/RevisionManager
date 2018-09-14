@@ -59,7 +59,6 @@ public class RevisionEntry {
     }
 
     /**
-     * RevisionEntry constructor
      * Construct a new RevisionEntry object.
      *
      * WARNING: Not to be used to making or loading entry's; use newEntry() and loadEntry(int ID)
@@ -81,11 +80,10 @@ public class RevisionEntry {
     }
 
     /**
-     * RevisionEntry generator
      * Construct a new RevisionEntry and save to file.
      *
      * @param message   User input message, a record of what the entry is for.
-     * @return          Return an instance of the RevisionEntry created with the given parameters.
+     * @return          an instance of the RevisionEntry created with the given parameters.
      */
     public static RevisionEntry newEntry(String message){
         // Todo make return Optional (what if file creation fails etc.)
@@ -248,6 +246,8 @@ public class RevisionEntry {
     public void saveToFile(){
 
         // Todo: Boolean return to show success/failure?
+
+        // Todo: add edit function to entries, therefore have this check for and remove previous entries of the same ID
 
         File entries = new File("entries.txt");
         PrintWriter printer = null;
