@@ -6,6 +6,7 @@ import org.fusesource.jansi.Ansi;
 import java.io.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Scanner;
 
@@ -16,7 +17,9 @@ public class RecallManager {
 
     public static void recall(){
 
-        ArrayList<Integer> due = getDueRecalls();
+        HashSet<Integer> due = getDueRecalls();
+        // Hashset removes duplicates
+        // Todo: find out why everything was previously duplicated (could be interval periods?)
 
         recallIDs(due);
 
@@ -88,10 +91,10 @@ public class RecallManager {
 
     }
 
-    public static ArrayList<Integer> getDueRecalls(){
+    public static HashSet<Integer> getDueRecalls(){
 
         ArrayList<String> recalls = FileManager.loadFile("recalls.txt");
-        ArrayList<Integer> due = new ArrayList<>();
+        HashSet<Integer> due = new HashSet<>();
 
         LocalDate today = LocalDate.now();
 
@@ -115,7 +118,7 @@ public class RecallManager {
 
     }
 
-    public static void recallIDs(ArrayList<Integer> IDs){
+    public static void recallIDs(HashSet<Integer> IDs){
 
         ArrayList<RevisionEntry> entries = RevisionEntry.getEntries();
         Utils.debug("recallingID's...");
