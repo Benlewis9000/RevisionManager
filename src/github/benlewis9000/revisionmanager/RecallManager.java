@@ -17,10 +17,13 @@ import static org.fusesource.jansi.Ansi.ansi;
 public class RecallManager {
 
     /*
-        Todo: make a Recall object?
+        Todo: DESIGN RECALL OBJECT - make a Recall object? - 27/12/18
             - toString method
+            - parseRecall method (string -> object)
+            - method call() i.e. 'execute' recall, print out, due = false, remove from lists etc etc...
+                - for (Recall recall : recalls) { recall() }
             - one due date
-                - each RevisionEntry takes ArrayList<Recall), can be written out toString
+                - each RevisionEntry takes ArrayList(Recall), can be written out toString
             - vars:
                 - relevant RevisionEntry ID <int>
                 - due date (recall date) <String?>
@@ -29,13 +32,12 @@ public class RecallManager {
 
     public static void recall(){
 
+        // Todo: remove onRecall ( the command i.e. make automatic ) - 24/12/18
+
+        // Get ID's due for recall (HashSet to ignore duplicates)
         HashSet<Integer> due = getDueRecalls();
-        // Hashset removes duplicates
-        // Todo: find out why everything was previously duplicated (could be interval periods?)
 
         recallIDs(due);
-
-        // TOdo: remove on recall ( the command i.e. make automatic )
 
     }
 
@@ -43,21 +45,6 @@ public class RecallManager {
      * Generate recall dates for all entries based on the interval periods listed in 'settings.txt', then save to 'recalls.txt'.
      */
     public static ArrayList<String> generateRecalls(){
-
-//        // GET INTERVALS
-//        Optional<ArrayList<Integer>> intervalsOpt = getIntervals();
-//
-//        // Check interval periods were acquired, if true, assign to Integer ArrayList
-//        ArrayList<Integer> intervalsArl;
-//        if (intervalsOpt.isPresent()){
-//
-//            intervalsArl = intervalsOpt.get();
-//
-//        }
-//        else {
-//            System.out.println( ansi().render("@|red ERROR: No intervals have been loaded."));
-//            return;
-//        }
 
         // Get RevisionEntry's as ArrayList
         ArrayList<RevisionEntry> entries = RevisionEntry.getEntries();
@@ -71,10 +58,6 @@ public class RecallManager {
 
         }
 
-        /*
-        // WRITE RECALLS
-        saveRecalls(recalls);
-        */
         return recalls;
 
     }
