@@ -10,10 +10,22 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Scanner;
 
+import static github.benlewis9000.revisionmanager.FileManager.writeLines;
 import static org.fusesource.jansi.Ansi.Color.YELLOW;
 import static org.fusesource.jansi.Ansi.ansi;
 
 public class RecallManager {
+
+    /*
+        Todo: make a Recall object?
+            - toString method
+            - one due date
+                - each RevisionEntry takes ArrayList<Recall), can be written out toString
+            - vars:
+                - relevant RevisionEntry ID <int>
+                - due date (recall date) <String?>
+                - boolean due <boolean>
+     */
 
     public static void recall(){
 
@@ -23,53 +35,59 @@ public class RecallManager {
 
         recallIDs(due);
 
-        // TOdo: remove on recall
+        // TOdo: remove on recall ( the command i.e. make automatic )
 
     }
 
     /**
      * Generate recall dates for all entries based on the interval periods listed in 'settings.txt', then save to 'recalls.txt'.
      */
-    public static void regenerateRecalls(){
+    public static ArrayList<String> generateRecalls(){
 
-        // GET INTERVALS
-        Optional<ArrayList<Integer>> intervalsOpt = getIntervals();
+//        // GET INTERVALS
+//        Optional<ArrayList<Integer>> intervalsOpt = getIntervals();
+//
+//        // Check interval periods were acquired, if true, assign to Integer ArrayList
+//        ArrayList<Integer> intervalsArl;
+//        if (intervalsOpt.isPresent()){
+//
+//            intervalsArl = intervalsOpt.get();
+//
+//        }
+//        else {
+//            System.out.println( ansi().render("@|red ERROR: No intervals have been loaded."));
+//            return;
+//        }
 
-        ArrayList<Integer> intervalsArl;
-        if (intervalsOpt.isPresent()){
-
-            intervalsArl = intervalsOpt.get();
-
-        }
-        else {
-            System.out.println( ansi().render("@|red ERROR: No intervals have been loaded."));
-            return;
-        }
-
-        // GET ENTRIES
-
+        // Get RevisionEntry's as ArrayList
         ArrayList<RevisionEntry> entries = RevisionEntry.getEntries();
-
-        // ORGANISE RECALLS
 
         ArrayList<String> recalls = new ArrayList<>();
 
         // Cycle RevisionEntry's
         for (RevisionEntry entry : entries){
 
-            recalls.addAll(generateEntryRecalls(entry, intervalsArl));
+            recalls.addAll(generateRecalls(entry));
 
         }
 
+        /*
         // WRITE RECALLS
-
         saveRecalls(recalls);
+        */
+        return recalls;
 
     }
 
-    public static void generateRecall(RevisionEntry entry){
+    /**
+     * Generate recalls for a single RevisionEntry based on interval periods listed in 'settings.txt'.
+     * @param entry RevisionEntry to generate recalls for.
+     */
+    public static ArrayList<String> generateRecalls(RevisionEntry entry){
 
-        // GET INTERVALS
+        ArrayList<String> recalls = new ArrayList<>();
+
+        // Get intervals (if available)
         Optional<ArrayList<Integer>> intervalsOpt = getIntervals();
 
         ArrayList<Integer> intervalsArl;
@@ -80,35 +98,82 @@ public class RecallManager {
         }
         else {
             System.out.println( ansi().render("@|red ERROR: No intervals have been loaded."));
-            return;
+            return recalls;
         }
 
-        ArrayList<String> recalls = generateEntryRecalls(entry, intervalsArl);
+        recalls = generateRecalls(entry, intervalsArl);
 
-        // WRITE RECALLS
-
-        saveRecalls(recalls);
+        return recalls;
 
     }
 
+    /**
+     * Generate recall dates for a given entry and given interval periods.
+     * @param entry         entry to generate recalls for
+     * @param intervalsArl  interval periods for the entries recalls
+     * @return an ArrayList(String) containing the recall lines for the entry in CSV format.
+     */
+    private static ArrayList<String> generateRecalls(RevisionEntry entry, ArrayList<Integer> intervalsArl){
+
+        ArrayList<String> recalls = new ArrayList<>();
+
+        // Get date (at users locale)
+        LocalDate creation = LocalDate.of(entry.getYear(), entry.getMonth(), entry.getDay());
+
+        // Generate recall dates for given entry for each interval
+        for (int interval : intervalsArl){
+
+            Utils.debug("Cycling interval " + interval);
+
+            // Calculate recall date as LocalDate
+            LocalDate recallDate = creation.plusDays(interval);
+            Utils.debug("recallDate: " + recallDate.toString());
+
+            // Ensure recall date has not already passed..
+            if (recallDate.isAfter(LocalDate.now())) {
+
+                Utils.debug("TRUE");
+
+                // ..add formatted recall to list of recalls
+                recalls.add(recallDate.getYear() + ";" + recallDate.getMonthValue() + ";" + recallDate.getDayOfMonth() + ";" + entry.getID());  // NOTE: No boolean; remove recall on recall
+                Utils.debug(recallDate.getYear() + ";" + recallDate.getMonthValue() + ";" + recallDate.getDayOfMonth() + ";" + entry.getID());
+
+            } else Utils.debug("FALSE");
+
+        }
+
+        return recalls;
+
+    }
+
+    /**
+     * Get a list of the ID's due to be recalled.
+     * @return HashSet containing ID's of all due recalls
+     */
     public static HashSet<Integer> getDueRecalls(){
 
+        // Loads recalls, line by line
         ArrayList<String> recalls = FileManager.loadFile("recalls.txt");
+
         HashSet<Integer> due = new HashSet<>();
 
+        // Get current date
         LocalDate today = LocalDate.now();
 
         for (String recall : recalls){
 
             String[] split = recall.split(";");
             LocalDate recallDue;
+
+            // Validate that each CSV value is a positive integer
             int year = Utils.tryParsePosInt(split[0]);
             int month = Utils.tryParsePosInt(split[1]);
             int day = Utils.tryParsePosInt(split[2]);
             int ID = Utils.tryParsePosInt(split[3]);
-
+            // ..if not, continue with loop
             if (year == -1 || month == -1 || day == -1 || ID == -1) continue;
 
+            // ..else, create new LocalDate, and add to return if due before or on the current date
             recallDue = LocalDate.of(year, month, day);
             if (recallDue.isBefore(today) || recallDue.isEqual(today)) due.add(ID);
 
@@ -118,8 +183,13 @@ public class RecallManager {
 
     }
 
+    /**
+     * Print out recalls for given RevisionEntry ID's
+     * @param IDs ID's of RevisionEntry's to recall
+     */
     public static void recallIDs(HashSet<Integer> IDs){
 
+        // Get all RevisionEntry's
         ArrayList<RevisionEntry> entries = RevisionEntry.getEntries();
         Utils.debug("recallingID's...");
 
@@ -145,14 +215,15 @@ public class RecallManager {
     }
 
     /**
-     * Gets the interval periods listed in 'settings.txt' if present.
-     *
+     * Gets the int interval periods listed in 'settings.txt', if present (else return empty Optional).
      * @return  an optional of either an ArrayList(Integer) of interval periods, or empty if they could not be loaded.
      */
     public static Optional<ArrayList<Integer>> getIntervals(){
 
+        // Get interval periods (if possible) froms settings
         Optional<String> intervalOpt = FileManager.getSetting("intervals");
 
+        // If could not read optionals, print error message and return empty
         if (!intervalOpt.isPresent()){
 
             System.out.println("@|red ERROR: Could not find 'intervals' in 'settings.txt'");
@@ -160,9 +231,11 @@ public class RecallManager {
 
         }
 
+        // Split optionals from CSV to individual values
         String[] intervalsStr = intervalOpt.get().split(",");
         ArrayList<Integer> intervalsArl = new ArrayList<>();
 
+        // Parse each value to int (if possible) and add to Integer ArrayList
         for (String str : intervalsStr){
 
             try {
@@ -186,77 +259,12 @@ public class RecallManager {
     }
 
     /**
-     * Generates the recall lines for a given entry and interval periods.
-     *
-     * @param entry         Entry to generate recalls for.
-     * @param intervalsArl  Interval periods for the entries recalls.
-     * @return an ArrayList(String) containing the recall lines for the entry in CSV format.
-     */
-    public static ArrayList<String> generateEntryRecalls(RevisionEntry entry, ArrayList<Integer> intervalsArl){
-
-        ArrayList<String> recalls = new ArrayList<>();
-
-        LocalDate creation = LocalDate.of(entry.getYear(), entry.getMonth(), entry.getDay());
-
-        for (int interval : intervalsArl){
-
-            Utils.debug("Cycling interval " + interval);
-
-            LocalDate recallDate = creation.plusDays(interval);
-            Utils.debug("recallDate: " + recallDate.toString());
-
-            // If recall date has already passed, ignore
-            if (recallDate.isAfter(LocalDate.now())) {
-
-                Utils.debug("TRUE");
-
-                recalls.add(recallDate.getYear() + ";" + recallDate.getMonthValue() + ";" + recallDate.getDayOfMonth() + ";" + entry.getID());  // NOTE: No boolean; remove recall on recall
-                Utils.debug(recallDate.getYear() + ";" + recallDate.getMonthValue() + ";" + recallDate.getDayOfMonth() + ";" + entry.getID());
-
-            } else Utils.debug("FALSE");
-
-        }
-
-        return recalls;
-
-    }
-
-    /**
      * Saves given recalls to 'recalls.txt'
      * @param recalls ArrayList of recalls to save.
      */
     public static void saveRecalls(ArrayList<String> recalls){
 
-        // Todo make FileManager method SaveToFile
-
-        File file = new File("recalls.txt");
-        PrintWriter printer = null;
-
-        try {
-
-            printer = new PrintWriter(file);
-
-            for (String recall : recalls){
-
-                printer.println(recall);
-                Utils.debug("Printing recall");
-
-            }
-
-        }
-        catch (IOException e){
-
-            e.printStackTrace();
-            System.out.println( ansi().render("@|red ERROR: Failed to write recalls to 'recalls.txt'.|@"));
-
-        }
-        finally {
-
-            if (printer != null) {
-                printer.close();
-            }
-
-        }
+        writeLines(recalls, "recalls.txt");
 
     }
 
@@ -277,20 +285,5 @@ public class RecallManager {
         saveRecalls(recalls);
 
     }
-
-
-
-
-
-    /*
-
-            When reading recall intervals; (for generateRecalls())
-                - in days
-                - Sort by descending
-                - Start with longest, if generated date would've already passed, break
-                -
-
-
-     */
 
 }

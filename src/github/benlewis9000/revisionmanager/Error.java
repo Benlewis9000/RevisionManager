@@ -5,6 +5,9 @@ import org.fusesource.jansi.Ansi;
 import static org.fusesource.jansi.Ansi.Color.RED;
 import static org.fusesource.jansi.Ansi.ansi;
 
+/**
+ * Error code enums with designated messages and print method.
+ */
 public enum Error {
 
     CNF("ERROR: Command Not Found. Type \"help\" for a list of commands."),
@@ -23,6 +26,9 @@ public enum Error {
 
     }
 
+    /**
+     * Print error message of Error enums.
+     */
     public void printError(){
 
         System.out.println( ansi().fg(RED).a(this.message).reset());

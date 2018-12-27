@@ -8,11 +8,20 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Scanner;
 
+import static github.benlewis9000.revisionmanager.RecallManager.saveRecalls;
 import static org.fusesource.jansi.Ansi.ansi;
 
 public class CommandHandler {
 
+    // Todo: Make Command an object?
+
     // Todo: convert Error's to Exception's and handle
+
+    /**
+     * Handle commands and call correct method.
+     * @param args  arguments passed by user
+     * @return  An Optional where an error is included should it be occur.
+     */
     public static Optional<Error> onCommand(String[] args){
 
         if ( args.length == 0 ) return Optional.of(Error.CNF);
@@ -42,6 +51,11 @@ public class CommandHandler {
 
     }
 
+    /**
+     * Handle 'entry' commands, call specified methods.
+     * @param args
+     * @return
+     */
     public static Optional<Error> onEntry(String[] args){
 
         if (args.length >= 3){
@@ -71,7 +85,7 @@ public class CommandHandler {
 
                 case "list":
 
-                    return onEntry_list(args);
+                    return onEntry_list();
 
             }
 
@@ -81,6 +95,11 @@ public class CommandHandler {
 
     }
 
+    /**
+     * Attempt to write a new entry with given args.
+     * @param args  entry message
+     * @return  Optional containing any error that should occur.
+     */
     public static Optional<Error> onEntry_new(String[] args){
 
         // Generate a new RevisionEntry
@@ -104,25 +123,34 @@ public class CommandHandler {
 
         }
 
-        RevisionEntry newEntry = RevisionEntry.newEntry(message);
+        RevisionEntry.newEntry(message);
         // Automatically saved to file by constructor
 
         return Optional.empty();
 
     }
 
+    /**
+     * View a specified entry.
+     * @param args  ID of desired entry
+     * @return  Optional containing any error that should occur.
+     */
     public static Optional<Error> onEntry_view(String[] args){
 
         // View one specified entry
 
         try {
 
+            // Extract ID from args
             int ID = Integer.parseInt(args[2]);
 
+            // Check ID is valid
             if (RevisionEntry.loadEntry(ID).isPresent()) {
 
+                // Load RevisionEntry with corresponding ID
                 RevisionEntry loadedEntry = RevisionEntry.loadEntry(ID).get();
 
+                // Print RevisionEntry data
                 System.out.println(ansi().render("@|green Found entry " + ID + ": " +
                         "\n    Created: |@" + loadedEntry.getDay() + "/" + loadedEntry.getMonth() + "/" + loadedEntry.getYear() +
                         "\n    @|green Message: |@" + loadedEntry.getMessage() +
@@ -131,15 +159,13 @@ public class CommandHandler {
                 return Optional.empty();
 
             }
-            else {
 
-                return Optional.empty();
-
-            }
+            else return Optional.empty();
 
         }
         catch (NumberFormatException e){
 
+            // Catch NumberFormatException and return as Error enum Optional
             return Optional.of(Error.NFE);
 
         }
@@ -148,23 +174,33 @@ public class CommandHandler {
 
     public static Optional<Error> onEntry_delete(String[] args){
 
+        // TODO...
+
         return Optional.empty();
 
     }
 
-    public static Optional<Error> onEntry_list(String[] args){
+    /**
+     * List all entries.
+     * @return Optional containing any error that should occur.
+     */
+    public static Optional<Error> onEntry_list(){
+
+        // Todo: account for recall periods, ignore recalled? -arg parameters?
 
         Scanner scanner = null;
 
         try {
 
+            // Read entries.txt
             scanner = new Scanner( new File("entries.txt"));
 
-            boolean noneFound = true;
+            boolean found = false;
 
             while (scanner.hasNextLine()){
 
-                noneFound = false;
+                // Set found true as soon as first entry is found
+                found = true;
 
                 String[] split = scanner.nextLine().split(";");
 
@@ -174,7 +210,7 @@ public class CommandHandler {
 
             }
 
-            if (noneFound) System.out.println( ansi().render("@|red No entries found.|@"));
+            if (!found) System.out.println( ansi().render("@|red No entries found.|@"));
 
             return Optional.empty();
 
@@ -189,14 +225,24 @@ public class CommandHandler {
         }
         finally {
 
-            scanner.close();
+            if (scanner != null) scanner.close();
 
         }
 
+
+
     }
 
+    /**
+     * Trigger recall system and list due recalls.
+     * @param args option of whether to generate recalls or execute recall (TEMPORARY - to be cleaned, treated like 'entry __' command)
+     * @return Empty Optional
+     */
     public static Optional<Error> onRecall(String[] args){
 
+        // Todo: change args to switch statement? length==1 being 'null'? UPDATE - not possible to switch null - 27/12/18
+
+        // If no additional args, print recalls.
         if (args.length == 1){
 
             RecallManager.recall();
@@ -204,10 +250,15 @@ public class CommandHandler {
 
         }
 
+        // If stated, generate recalls - Todo: Automate this system? Lengthy - room for faster algorithm? - 26/12/18
         else if (args[1].equalsIgnoreCase("generate")) {
 
+            // Generate list of recall dates and ID's - Todo: Recalls as objects with a toString and parseRecall (parse entry too?) - 27/12/18
             System.out.println("Generating recalls...");
-            RecallManager.regenerateRecalls();
+            ArrayList<String> recalls = RecallManager.generateRecalls();
+
+            // Save generated recalls to 'recalls.txt'
+            saveRecalls(recalls);
 
         }
 
@@ -215,6 +266,10 @@ public class CommandHandler {
 
     }
 
+    /**
+     * List commands and usage.
+     * @return  Optional containing any error that should occur.
+     */
     public static Optional<Error> onHelp(){
 
         System.out.println( ansi().render("Commands:" +
@@ -233,6 +288,11 @@ public class CommandHandler {
 
     }
 
+    /**
+     * Split a string separated by spaces into array of String args
+     * @param string String to separate
+     * @return String array of args
+     */
     public static String[] stringToArgs(String string) {
 
         return string.split(" ");

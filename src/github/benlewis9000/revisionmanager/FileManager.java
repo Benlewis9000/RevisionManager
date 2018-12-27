@@ -1,9 +1,10 @@
 
 package github.benlewis9000.revisionmanager;
 
+import org.fusesource.jansi.Ansi;
+
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Optional;
 import java.util.Scanner;
 
@@ -245,6 +246,11 @@ public class FileManager {
 
     }
 
+    /**
+     * Load each line of a file into an ArrayList of Strings.
+     * @param fileName  file to read
+     * @return  ArrayList of Strings where each String is a line from given file
+     */
     public static ArrayList<String> loadFile(String fileName){
 
         Scanner scanner = null;
@@ -283,5 +289,39 @@ public class FileManager {
 
     }
 
+    /**
+     * Write ArrayList of Strings out line by line to specified file.
+     * @param lines Strings to be written out as lines
+     * @param fileName filename to write lines to
+     */
+    public static void writeLines(ArrayList<String> lines, String fileName){
+
+        PrintWriter printWriter = null;
+
+        try {
+
+            printWriter = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
+
+            for (String line : lines){
+
+                printWriter.println(line);
+                Utils.debug("(" + fileName + ") writing out: " + line);
+
+            }
+
+        }
+        catch (IOException e){
+
+            System.out.println( ansi().fg(Ansi.Color.RED).a("ERROR: IOException writing lines to " + fileName + ".").reset());
+            e.printStackTrace();
+
+        }
+        finally {
+
+            if (printWriter != null) printWriter.close();
+
+        }
+
+    }
 
 }
