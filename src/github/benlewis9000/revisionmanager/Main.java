@@ -24,17 +24,21 @@ public class Main {
         // Install Jansi system for coloured text output
         AnsiConsole.systemInstall();
 
-        Utils.debug("Ansi installed.");
+        Utils.debug("Ansi installed(?)");
         Utils.debug("Debug enabled.");
 
         // Make sure all required files exist
         FileManager.generateFiles();
 
+        // Set debug status to that defined in 'settings.txt'
         Utils.reloadDebug();
 
         Utils.debug("LocalDate.now(): " + LocalDate.now().toString());
 
         // Todo: check for overdue entries
+
+        // RecallManager.generateRecalls(); - TODO: Can't generateRecalls, as this will clear recalls due on previous days that may not have ever been loaded/seen by user.
+        RecallManager.recall();
 
         while (true){
 

@@ -172,22 +172,29 @@ public class RecallManager {
      */
     public static void recallIDs(HashSet<Integer> IDs){
 
+        // Todo: take an ArrayList of Strings and return for handling? Allow for a 'None found' message to display. - 30/12/18
+
         // Get all RevisionEntry's
         ArrayList<RevisionEntry> entries = RevisionEntry.getEntries();
         Utils.debug("recallingID's...");
 
+        System.out.println( ansi().fg(YELLOW).a("Today's recalls:").reset());
+
+        // Cycle each entry ID in given list of ID's
         for(int id : IDs){
 
             Utils.debug("   " + id);
 
+            // Cycle each entry, and check whether loop ID matches that of found entry
             for(RevisionEntry entry : entries){
 
                 Utils.debug("   " + entry.getID());
 
                 if (entry.getID() == id){
 
-                    System.out.println( ansi().fg(YELLOW).a("Entry ").reset().a(id).fg(YELLOW).a(" from ").reset().a(entry.getDay()).a("/").a(entry.getMonth()).a("/").a(entry.getYear()).fg(YELLOW));
-                    System.out.println( ansi().a("  ").a(entry.getMessage()).reset());
+                    // Print recall message
+                    System.out.println( ansi().fg(YELLOW).a("   Entry ").reset().a(id).fg(YELLOW).a(" from ").reset().a(entry.getDay()).a("/").a(entry.getMonth()).a("/").a(entry.getYear()).fg(YELLOW));
+                    System.out.println( ansi().a("    ").a(entry.getMessage()).reset());
 
                 }
 
